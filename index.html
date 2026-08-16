@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FileForge - Image to PDF Converter (Private & Local)</title>
-    <meta name="description" content="Convert single or multiple images to a single PDF document securely in your browser.">
+    <title>FileForge - All-in-One Private Converter</title>
+    <meta name="description" content="Convert PDF and image files instantly in your browser securely.">
     
-    <!-- Load pdf-lib from CDN -->
+    <!-- PDF-Lib for Client-Side PDF Manipulation -->
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     
     <style>
@@ -22,14 +22,10 @@
             --error: #ef4444;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             line-height: 1.6;
@@ -38,37 +34,56 @@
             min-height: 100vh;
         }
 
-        .container {
-            width: 100%;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
+        .container { width: 100%; max-width: 800px; margin: 0 auto; padding: 0 20px; }
 
-        /* Header */
         .site-header {
             background: var(--surface);
             border-bottom: 1px solid var(--border);
             padding: 15px 0;
-        }
-
-        .header-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .brand-logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
-            text-decoration: none;
+        .brand-logo { font-size: 1.5rem; font-weight: 700; color: var(--primary); text-decoration: none; }
+        .privacy-badge { background: #ecfdf5; color: #047857; padding: 5px 12px; border-radius: 20px; font-size: 0.9rem; font-weight: 500; }
+
+        .tool-page { padding: 40px 20px; text-align: center; }
+
+        .controls-wrapper {
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
         }
 
-        /* Buttons */
+        select {
+            padding: 12px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            border: 2px solid var(--primary);
+            background: white;
+            color: var(--text-main);
+            width: 100%;
+            max-width: 400px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .converter-interface {
+            background: var(--surface);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 40px;
+            transition: border-color 0.3s;
+        }
+
+        .converter-interface.dragover { border-color: var(--primary); background: #eff6ff; }
+
         .btn {
             display: inline-block;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 6px;
             border: none;
             cursor: pointer;
@@ -80,297 +95,268 @@
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: var(--primary-hover); }
         .btn-secondary { background: white; color: var(--primary); border: 1px solid var(--primary); }
-        .btn-large { width: 100%; padding: 15px; font-size: 1.1rem; }
         .btn-text { background: none; color: var(--text-muted); text-decoration: underline; margin-top: 10px; }
 
-        /* Tool Interface */
-        .tool-page {
-            padding: 40px 20px;
-            text-align: center;
-        }
+        .file-list { margin-top: 20px; text-align: left; }
+        .file-item { padding: 10px; background: var(--bg-color); border-radius: 6px; margin-bottom: 10px; font-size: 0.9rem; display: flex; justify-content: space-between; }
 
-        .privacy-badge {
-            display: inline-block;
-            background: #ecfdf5;
-            color: #047857;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            margin-bottom: 25px;
-            font-weight: 500;
-        }
-
-        .converter-interface {
-            background: var(--surface);
-            border: 2px dashed var(--border);
-            border-radius: 12px;
-            padding: 40px;
-            max-width: 700px;
-            margin: 0 auto 40px;
-            transition: border-color 0.3s;
-        }
-
-        .converter-interface.dragover {
-            border-color: var(--primary);
-            background: #eff6ff;
-        }
-
-        .upload-prompt span {
-            display: block;
-            margin: 10px 0;
-            color: var(--text-muted);
-        }
-
-        .format-note {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 15px;
-        }
-
-        .file-list {
-            text-align: left;
-            margin-top: 20px;
-        }
-
-        .file-item {
-            padding: 10px;
-            background: var(--bg-color);
-            border-radius: 6px;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .action-area {
-            margin-top: 25px;
-        }
-
-        .status-message {
-            margin-top: 15px;
-            font-weight: 500;
-        }
-        
+        .status-message { margin-top: 15px; font-weight: 500; }
         .status-error { color: var(--error); }
         .status-success { color: var(--success); }
-
-        /* Footer */
-        .site-footer {
-            margin-top: auto;
-            background: var(--surface);
-            border-top: 1px solid var(--border);
-            padding: 20px 0;
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
+        .status-warning { color: #d97706; background: #fef3c7; padding: 10px; border-radius: 6px; margin-top: 15px;}
     </style>
 </head>
 <body>
 
-    <header class="site-header">
-        <div class="container header-container">
-            <a href="#" class="brand-logo">FileForge</a>
-            <span class="privacy-badge">🔒 Local Client-Side Processing</span>
-        </div>
+    <header class="site-header container">
+        <a href="#" class="brand-logo">FileForge</a>
+        <span class="privacy-badge">🔒 Local Processing</span>
     </header>
 
     <main class="container tool-page">
-        <h1>Convert Images to PDF</h1>
-        <p style="color: #64748b; margin-bottom: 20px;">Instantly combine JPG, PNG, or WebP images into a single PDF document without uploading anything to a server.</p>
+        <h1>All-in-One File Converter</h1>
+        <p style="color: #64748b; margin-bottom: 30px;">Select a tool below. Most files are processed entirely offline in your browser.</p>
+
+        <div class="controls-wrapper">
+            <select id="conversion-type">
+                <option value="image-to-pdf">Images (JPG/PNG/WebP) → PDF</option>
+                <option value="png-to-jpg">PNG/WebP → JPG</option>
+                <option value="jpg-to-png">JPG/WebP → PNG</option>
+                <option value="merge-pdf">Merge Multiple PDFs</option>
+                <option value="pdf-to-word">PDF → Word (DOCX)</option>
+            </select>
+        </div>
 
         <div class="converter-interface" id="drop-zone">
-            <!-- Hidden input that handles the file selection dialog -->
-            <input type="file" id="file-input" multiple accept="image/jpeg, image/png, image/webp" hidden>
+            <input type="file" id="file-input" multiple hidden>
             
-            <div class="upload-prompt" id="upload-prompt">
-                <p style="font-weight: 600; font-size: 1.2rem;">Drag & Drop Images Here</p>
-                <span>or</span>
+            <div id="upload-prompt">
+                <p style="font-weight: 600; font-size: 1.2rem;">Drag & Drop Files Here</p>
+                <span style="display: block; margin: 10px 0; color: #64748b;">or</span>
                 <button class="btn btn-secondary" onclick="document.getElementById('file-input').click()">Select Files</button>
-                <p class="format-note">Supported Formats: JPG, PNG, WebP</p>
+                <p id="format-note" style="font-size: 0.85rem; color: #64748b; margin-top: 15px;">Supported: JPG, PNG, WebP</p>
             </div>
             
-            <!-- List of selected files will appear here -->
             <div id="file-preview-list" class="file-list"></div>
             
-            <!-- Action buttons hidden by default -->
-            <div class="action-area" id="action-area" style="display: none;">
-                <button id="convert-btn" class="btn btn-primary btn-large">Convert to PDF</button>
-                <button id="reset-btn" class="btn btn-text">Clear All Files</button>
+            <div id="action-area" style="display: none; margin-top: 25px;">
+                <button id="convert-btn" class="btn btn-primary" style="width: 100%;">Convert Files</button>
+                <button id="reset-btn" class="btn btn-text">Clear All</button>
             </div>
             
             <div id="status-message" class="status-message"></div>
         </div>
     </main>
 
-    <footer class="site-footer">
-        <div class="container">
-            <p>&copy; 2026 FileForge. Files never leave your device.</p>
-        </div>
-    </footer>
-
-    <!-- JavaScript Logic -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            const toolSelect = document.getElementById('conversion-type');
             const fileInput = document.getElementById('file-input');
             const dropZone = document.getElementById('drop-zone');
+            const uploadPrompt = document.getElementById('upload-prompt');
+            const formatNote = document.getElementById('format-note');
             const filePreviewList = document.getElementById('file-preview-list');
             const actionArea = document.getElementById('action-area');
             const convertBtn = document.getElementById('convert-btn');
             const resetBtn = document.getElementById('reset-btn');
             const statusMessage = document.getElementById('status-message');
-            const uploadPrompt = document.getElementById('upload-prompt');
 
             let selectedFiles = [];
 
-            // Drag and Drop Events
-            dropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropZone.classList.add('dragover');
+            // Define accepted formats based on selected tool
+            const toolConfig = {
+                'image-to-pdf': { accept: 'image/jpeg, image/png, image/webp', text: 'Supported: JPG, PNG, WebP' },
+                'png-to-jpg': { accept: 'image/png, image/webp', text: 'Supported: PNG, WebP' },
+                'jpg-to-png': { accept: 'image/jpeg, image/webp', text: 'Supported: JPG, WebP' },
+                'merge-pdf': { accept: 'application/pdf', text: 'Supported: PDF (Select multiple)' },
+                'pdf-to-word': { accept: 'application/pdf', text: 'Supported: PDF' }
+            };
+
+            // Update UI when tool changes
+            toolSelect.addEventListener('change', (e) => {
+                const config = toolConfig[e.target.value];
+                fileInput.accept = config.accept;
+                formatNote.textContent = config.text;
+                resetUI();
+
+                if (e.target.value === 'pdf-to-word') {
+                    statusMessage.innerHTML = "<div class='status-warning'><strong>Note:</strong> PDF to Word requires server-side processing to reconstruct document layouts. In this static version, this feature is marked as 'Coming Soon' (Phase 3).</div>";
+                }
             });
 
-            dropZone.addEventListener('dragleave', () => {
-                dropZone.classList.remove('dragover');
-            });
+            // Set initial accept attributes
+            fileInput.accept = toolConfig[toolSelect.value].accept;
 
+            // Drag & Drop
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
             dropZone.addEventListener('drop', (e) => {
                 e.preventDefault();
                 dropZone.classList.remove('dragover');
                 handleFiles(e.dataTransfer.files);
             });
 
-            // File selection via button
-            fileInput.addEventListener('change', (e) => {
-                handleFiles(e.target.files);
-            });
-
-            // Reset Button
+            fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
             resetBtn.addEventListener('click', resetUI);
 
-            // Trigger Conversion Process
-            convertBtn.addEventListener('click', async () => {
-                if (selectedFiles.length === 0) return;
-                
-                convertBtn.disabled = true;
-                convertBtn.textContent = "Processing locally in browser...";
-                statusMessage.className = "status-message";
-                statusMessage.textContent = "";
-
-                try {
-                    // Check if PDF-Lib loaded correctly from CDN
-                    if (window.PDFLib) {
-                        await convertImagesToPdf(selectedFiles);
-                    } else {
-                        throw new Error("PDF engine not loaded. Please check your internet connection.");
-                    }
-                } catch (error) {
-                    console.error(error);
-                    statusMessage.textContent = "Error: " + error.message;
-                    statusMessage.className = "status-message status-error";
-                } finally {
-                    convertBtn.disabled = false;
-                    convertBtn.textContent = "Convert to PDF";
-                }
-            });
-
-            // Validating file formats
+            // Validation
             function handleFiles(files) {
-                const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-                
+                const acceptedTypes = fileInput.accept.split(',').map(s => s.trim());
                 for (let file of files) {
-                    if (validTypes.includes(file.type)) {
+                    if (acceptedTypes.includes(file.type)) {
                         selectedFiles.push(file);
                     } else {
-                        alert(`${file.name} is not a supported image format.`);
+                        alert(`${file.name} is not supported for the selected tool.`);
                     }
                 }
                 updateUI();
             }
 
-            // Displaying selected files in UI
             function updateUI() {
                 if (selectedFiles.length > 0) {
                     uploadPrompt.style.display = 'none';
                     actionArea.style.display = 'block';
-                    
-                    filePreviewList.innerHTML = selectedFiles.map((file, index) => 
-                        `<div class="file-item">
-                            <span>${file.name}</span>
-                            <span>${(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                        </div>`
+                    filePreviewList.innerHTML = selectedFiles.map(f => 
+                        `<div class="file-item"><span>${f.name}</span><span>${(f.size/1024/1024).toFixed(2)} MB</span></div>`
                     ).join('');
                 } else {
                     resetUI();
                 }
             }
 
-            // Resetting UI back to upload prompt
             function resetUI() {
                 selectedFiles = [];
                 fileInput.value = '';
                 uploadPrompt.style.display = 'block';
                 actionArea.style.display = 'none';
                 filePreviewList.innerHTML = '';
-                statusMessage.textContent = '';
+                if(toolSelect.value !== 'pdf-to-word') {
+                    statusMessage.textContent = '';
+                    statusMessage.className = 'status-message';
+                }
             }
 
-            // Core functionality: Embeds images into a new PDF using pdf-lib
-            async function convertImagesToPdf(files) {
+            // Main Conversion Trigger
+            convertBtn.addEventListener('click', async () => {
+                if (selectedFiles.length === 0) return;
+                
+                const task = toolSelect.value;
+                if (task === 'pdf-to-word') {
+                    alert("This feature requires a backend server and is disabled in the static client-only mode.");
+                    return;
+                }
+
+                convertBtn.disabled = true;
+                convertBtn.textContent = "Processing...";
+                statusMessage.className = "status-message";
+                statusMessage.textContent = "";
+
+                try {
+                    if (task === 'image-to-pdf') await processImageToPdf(selectedFiles);
+                    else if (task === 'merge-pdf') await processMergePdf(selectedFiles);
+                    else if (task === 'png-to-jpg' || task === 'jpg-to-png') await processImageFormat(selectedFiles, task);
+                } catch (error) {
+                    console.error(error);
+                    statusMessage.textContent = "Error: " + error.message;
+                    statusMessage.className = "status-message status-error";
+                } finally {
+                    convertBtn.disabled = false;
+                    convertBtn.textContent = "Convert Files";
+                }
+            });
+
+            // 1. Image to PDF Logic
+            async function processImageToPdf(files) {
+                if (!window.PDFLib) throw new Error("PDF Library failed to load.");
                 const { PDFDocument } = window.PDFLib;
                 const pdfDoc = await PDFDocument.create();
 
                 for (const file of files) {
                     const arrayBuffer = await file.arrayBuffer();
-                    let pdfImage;
-
-                    // Support for WebP works similarly to JPG extraction in modern browsers
-                    if (file.type === 'image/jpeg' || file.type === 'image/webp') {
-                        pdfImage = await pdfDoc.embedJpg(arrayBuffer);
-                    } else if (file.type === 'image/png') {
-                        pdfImage = await pdfDoc.embedPng(arrayBuffer);
-                    }
-
-                    // Get dimensions of the image and scale it to fit precisely onto a 1:1 page
+                    let pdfImage = (file.type === 'image/png') 
+                        ? await pdfDoc.embedPng(arrayBuffer) 
+                        : await pdfDoc.embedJpg(arrayBuffer);
+                        
                     const { width, height } = pdfImage.scale(1);
                     const page = pdfDoc.addPage([width, height]);
-
-                    // Draw the image filling the entire page
-                    page.drawImage(pdfImage, {
-                        x: 0,
-                        y: 0,
-                        width: width,
-                        height: height,
-                    });
+                    page.drawImage(pdfImage, { x: 0, y: 0, width, height });
                 }
-
-                // Generate PDF as bytes
                 const pdfBytes = await pdfDoc.save();
-                
-                // Prompt user to download the generated file locally
-                triggerDownload(pdfBytes, 'FileForge_Converted.pdf', 'application/pdf');
-                
-                statusMessage.textContent = "Success! PDF generated securely in your browser.";
-                statusMessage.className = "status-message status-success";
+                triggerDownload(new Blob([pdfBytes], { type: 'application/pdf' }), 'Converted_Images.pdf');
+                showSuccess();
             }
 
-            // Browser download trigger helper
-            function triggerDownload(byteData, fileName, mimeType) {
-                const blob = new Blob([byteData], { type: mimeType });
+            // 2. Merge PDF Logic
+            async function processMergePdf(files) {
+                if (!window.PDFLib) throw new Error("PDF Library failed to load.");
+                const { PDFDocument } = window.PDFLib;
+                const mergedPdf = await PDFDocument.create();
+
+                for (let file of files) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await PDFDocument.load(arrayBuffer);
+                    const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+                    copiedPages.forEach((page) => mergedPdf.addPage(page));
+                }
+                const pdfBytes = await mergedPdf.save();
+                triggerDownload(new Blob([pdfBytes], { type: 'application/pdf' }), 'Merged_Document.pdf');
+                showSuccess();
+            }
+
+            // 3. Image to Image Format Shifting (Canvas API)
+            async function processImageFormat(files, task) {
+                const targetMime = task === 'png-to-jpg' ? 'image/jpeg' : 'image/png';
+                const ext = task === 'png-to-jpg' ? 'jpg' : 'png';
+
+                for (let file of files) {
+                    const blob = await convertViaCanvas(file, targetMime);
+                    triggerDownload(blob, `${file.name.split('.')[0]}_converted.${ext}`);
+                }
+                showSuccess();
+            }
+
+            function convertViaCanvas(file, targetMime) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    const url = URL.createObjectURL(file);
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        
+                        if (targetMime === 'image/jpeg') {
+                            ctx.fillStyle = '#FFFFFF';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        }
+                        
+                        ctx.drawImage(img, 0, 0);
+                        canvas.toBlob((blob) => {
+                            URL.revokeObjectURL(url);
+                            resolve(blob);
+                        }, targetMime, 0.95);
+                    };
+                    img.onerror = reject;
+                    img.src = url;
+                });
+            }
+
+            // Helpers
+            function triggerDownload(blob, fileName) {
                 const url = URL.createObjectURL(blob);
-                
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = fileName;
                 document.body.appendChild(a);
                 a.click();
-                
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100);
+                setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+            }
+
+            function showSuccess() {
+                statusMessage.textContent = "Success! Files processed securely in your browser.";
+                statusMessage.className = "status-message status-success";
             }
         });
     </script>
 </body>
-  </html>
-  
+</html>
